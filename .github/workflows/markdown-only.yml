@@ -1,0 +1,27 @@
+name: Markdown files only
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check-file-types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fail if any non-Markdown file is in the repo
+        run: |
+          # Allowed exceptions: .md files, this workflow folder, .gitignore, LICENSE
+          bad_files=$(git ls-files | grep -vE '\.md$' | grep -vE '^\.github/' | grep -vE '^(\.gitignore|LICENSE)$' || true)
+
+          if [ -n "$bad_files" ]; then
+            echo "::error::Only Markdown (.md) files are allowed in this repo."
+            echo "These files are not allowed:"
+            echo "$bad_files" | while read -r f; do
+              echo "::error file=$f::Not a Markdown file: $f"
+            done
+            exit 1
+          fi
+
+          echo "All files are Markdown. ✅"
